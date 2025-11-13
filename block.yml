@@ -1,0 +1,18 @@
+name: RNN_Plant_Detector
+type: learning
+category: classification
+description: Detects plant diseases through a Recurrent Neural Network (RNN)
+version: 1.0.0
+author: Your Name
+
+inputs:
+  - name: image
+    type: features
+    description: Input image features from the image block
+
+outputs:
+  - type: classifications
+    description: Predicted plant disease class
+
+framework: keras
+dockerfile: Dockerfile
