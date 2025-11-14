@@ -1,9 +1,8 @@
-FROM tensorflow/tensorflow:2.12.0
+FROM tensorflow/tensorflow:2.13.0
+
+RUN pip install --no-cache-dir numpy pillow edgeimpulse-learning-blocks
 
 WORKDIR /app
-
 COPY . /app
 
-RUN pip install -r requirements.txt
-
-ENTRYPOINT ["python3", "train.py"]
+ENTRYPOINT ["python3", "model_training.py"]
