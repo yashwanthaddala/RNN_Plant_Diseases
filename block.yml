@@ -1,27 +1,16 @@
 version: 1
 type: learning
 name: RNN_Plant_Detector
-description: Custom RNN training block for plant disease classification
-
-docker:
-  image: "<your-dockerhub-username>/<your-repo>:latest"
-  username: "$DOCKERHUB_USERNAME"
-  password: "$DOCKERHUB_PASSWORD"
+description: Simple RNN training block for plant disease classification
 
 src: https://github.com/yashwanthaddala/RNN_Plant_Diseases.git
 
 entrypoint: model_train.py
 
-model:
-  load_model: load_model
-  train: train
-  evaluate: evaluate
-
 parameters:
   epochs:
     type: int
-    default: 20
+    default: 5
   batch_size:
     type: int
-    default: 32
-
+    default: 16
