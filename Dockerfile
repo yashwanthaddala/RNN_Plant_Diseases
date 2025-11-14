@@ -1,4 +1,6 @@
-FROM tensorflow/tensorflow:2.13.0-lite
+FROM python:3.10-slim
+RUN pip install --no-cache-dir tensorflow==2.13.0 numpy pandas edgeimpulse-learning-blocks
+
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
