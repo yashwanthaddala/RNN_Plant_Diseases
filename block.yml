@@ -1,13 +1,25 @@
+version: 1
+type: learning
 name: RNN_Plant_Detector
-version: 1.0
-type: training
-dockerfile: Dockerfile
-
 description: Custom RNN training block for plant disease classification
 
+docker:
+  image: edgeimpulse/learning-block:latest
+
+src: https://github.com/yashwanthaddala/RNN_Plant_Diseases.git
+
+entrypoint: model_train.py
+
 model:
-  type: image
-  input:
-    width: 96
-    height: 96
-    channels: 3  # rgb
+  load_model: load_model
+  train: train
+  evaluate: evaluate
+
+parameters:
+  epochs:
+    type: int
+    default: 20
+  batch_size:
+    type: int
+    default: 32
+
