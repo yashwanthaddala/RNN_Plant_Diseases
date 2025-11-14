@@ -4,7 +4,9 @@ name: RNN_Plant_Detector
 description: Custom RNN training block for plant disease classification
 
 docker:
-  image: edgeimpulse/learning-block:latest
+  image: "<your-dockerhub-username>/<your-repo>:latest"
+  username: "$DOCKERHUB_USERNAME"
+  password: "$DOCKERHUB_PASSWORD"
 
 src: https://github.com/yashwanthaddala/RNN_Plant_Diseases.git
 
