@@ -1,62 +1,59 @@
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout, Flatten
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-import os
-import json
-import numpy as np
+from tensorflow.keras import layers, models
+import ei_tensorflow.training
 
-# === Required Edge Impulse arguments ===
-DATA_DIRECTORY = os.getenv("DATA_DIRECTORY", "/data")
-MODEL_OUTPUT_DIR = os.getenv("MODEL_OUTPUT_DIR", "/output")
-MODEL_FILE = os.path.join(MODEL_OUTPUT_DIR, "model.h5")
+def load_model(input_shape, num_classes, **kwargs):
+    """
+    Builds and returns an RNN-based model for image classification.
+    Edge Impulse automatically calls this function.
+    """
 
-# Load training and testing data from Edge Impulse
-train_features = np.load(os.path.join(DATA_DIRECTORY, "X_train.npy"))
-train_labels = np.load(os.path.join(DATA_DIRECTORY, "y_train.npy"))
-test_features = np.load(os.path.join(DATA_DIRECTORY, "X_test.npy"))
-test_labels = np.load(os.path.join(DATA_DIRECTORY, "y_test.npy"))
+    # Convert 2D image into a sequence for the RNN
+    # Flatten image into sequence of rows
+    model = models.Sequential()
 
-# Normalize data
-train_features = train_features / 255.0
-test_features = test_features / 255.0
+    # Reshape image: (H, W, C) -> (H, W*C)
+    model.add(layers.Reshape((input_shape[0], input_shape[1] * input_shape[2]),
+                             input_shape=input_shape))
 
-# Reshape for RNN input: (samples, timesteps, features)
-# For simplicity, we treat image rows as time steps
-n_samples, img_height, img_width, channels = train_features.shape
-train_features = train_features.reshape((n_samples, img_height, img_width * channels))
-test_features = test_features.reshape((test_features.shape[0], img_height, img_width * channels))
+    # First LSTM layer
+    model.add(layers.LSTM(128, return_sequences=True))
 
-num_classes = len(np.unique(train_labels))
+    # Second LSTM layer
+    model.add(layers.LSTM(64))
 
-# === Model Definition ===
-model = Sequential([
-    LSTM(64, input_shape=(img_height, img_width * channels), return_sequences=True),
-    Dropout(0.3),
-    LSTM(32),
-    Dense(64, activation='relu'),
-    Dense(num_classes, activation='softmax')
-])
+    # Dense classifier
+    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(num_classes, activation='softmax'))
 
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
+    # Compile model
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),
+        loss='categorical_crossentropy',
+        metrics=['accuracy']
+    )
 
-# === Training ===
-history = model.fit(
-    train_features, train_labels,
-    validation_data=(test_features, test_labels),
-    epochs=10,
-    batch_size=32
-)
+    return model
 
-# === Save model ===
-model.save(MODEL_FILE)
 
-# === Save metadata ===
-metadata = {
-    "accuracy": float(history.history["val_accuracy"][-1]),
-    "loss": float(history.history["val_loss"][-1]),
-}
-with open(os.path.join(MODEL_OUTPUT_DIR, "metadata.json"), "w") as f:
-    json.dump(metadata, f)
+def train(model, dataset, **kwargs):
+    """
+    Training loop used by Edge Impulse.
+    """
+
+    X_train, X_test, y_train, y_test = dataset
+
+    history = model.fit(
+        X_train, y_train,
+        validation_data=(X_test, y_test),
+        epochs=kwargs.get("epochs", 20),
+        batch_size=kwargs.get("batch_size", 32),
+        verbose=2
+    )
+
+    return history
+
+
+def evaluate(model, dataset, **kwargs):
+    X_train, X_test, y_train, y_test = dataset
+    return model.evaluate(X_test, y_test, verbose=0)
